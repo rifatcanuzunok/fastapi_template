@@ -1,13 +1,15 @@
+import uuid
+
 from fastapi import APIRouter, Depends, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from dao import UserDAO
+from dao import RedisDAO, UserDAO
 from dependencies import DependencyFactory
 from models import User
 from schemas import UserCreate, UserResponse, UserUpdate
-from services import Authenticator, RedisClient, TokenDTO, UserAuthenticator
+from services import Authenticator, RedisClient, TokenDTO, UserAuthenticator, registration_confirmation
 from utils import Result, filter_none_values
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -29,7 +31,13 @@ async def create_admin_user(
     admin_user: User = Depends(DependencyFactory.is_admin),
 ):
     hashed_password = authenticator.get_password_hash(data.password)
-    user = User(username=data.username, hashed_password=hashed_password, is_superuser=True)
+    user = User(
+        username=data.username,
+        hashed_password=hashed_password,
+        is_superuser=True,
+        email=data.email,
+        mail_confirmed=True,
+    )
     db_result = user_dao.create(user)
     if db_result.success:
         return JSONResponse("Registration successfull.", status.HTTP_201_CREATED)
@@ -118,13 +126,22 @@ async def update_user(
 async def register(
     data: UserCreate,
     user_dao: UserDAO = Depends(DependencyFactory.get_user_dao),
+    redis_dao: RedisDAO = Depends(DependencyFactory.get_redis_dao),
     authenticator: Authenticator = Depends(DependencyFactory.get_authenticator),
 ):
     hashed_password = authenticator.get_password_hash(data.password)
-    user = User(username=data.username, hashed_password=hashed_password)
+    user = User(username=data.username, hashed_password=hashed_password, email=data.email)
     db_result = user_dao.create(user)
     if db_result.success:
-        return JSONResponse("Registration successfull.", status.HTTP_201_CREATED)
+        mail_uuid = str(uuid.uuid4())
+        redis_dao.set(mail_uuid, data.username)
+        registration_confirmation.delay(
+            "Verify your e-mail",
+            data.username,
+            f"http://localhost:3654/user/verify/{mail_uuid}",
+            data.email,
+        )
+        return JSONResponse("Registration successfull. Please confirm your email", status.HTTP_201_CREATED)
     return JSONResponse(db_result.message, status.HTTP_400_BAD_REQUEST)
 
 
@@ -135,3 +152,20 @@ async def login(
 ):
     auth_result: Result[TokenDTO] = authenticator.authenticate_user(form_data.username, form_data.password)
     return auth_result.data
+
+
+@router.get("/verify/{mail_uuid}")
+async def verify(
+    mail_uuid,
+    user_dao: UserDAO = Depends(DependencyFactory.get_user_dao),
+    redis_dao: RedisDAO = Depends(DependencyFactory.get_redis_dao),
+):
+    username = redis_dao.get(mail_uuid)
+    db_result = user_dao.get_by_username(username)
+    if db_result.success:
+        user = db_result.data
+        if not user:
+            return JSONResponse("Invalid validation code", status_code=status.HTTP_404_NOT_FOUND)
+        if redis_dao.delete(mail_uuid):
+            return user_dao.update(user, {"mail_confirmed": True})
+    return JSONResponse(db_result.message, status.HTTP_400_BAD_REQUEST)

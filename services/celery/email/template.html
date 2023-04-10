@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Registration Confirmation</title>
+    <style>
+      /* Global styles */
+      body {
+        font-family: sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Email-specific styles */
+      .email-container {
+        background-color: #f9f9f9;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #333;
+        font-size: 24px;
+        font-weight: normal;
+        margin: 0 0 20px;
+      }
+
+      p {
+        margin: 0 0 20px;
+      }
+
+      .button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 14px 28px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+      a {
+        all: unset
+      }
+
+      .button:hover {
+        background-color: #3e8e41;
+        cursor: pointer;
+      }
+
+      /* Media queries */
+      @media screen and (max-width: 600px) {
+        .email-container {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <h1>Thank you for registering, {site_username}!</h1>
+      <p>Your account has been created successfully. Please click the button below to confirm your registration:</p>
+      <a href={confirmation_link} class="button">Confirm Registration</a>
+    </div>
+  </body>
+</html>

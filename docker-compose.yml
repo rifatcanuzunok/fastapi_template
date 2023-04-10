@@ -18,3 +18,23 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     command: [ "redis-server", "--bind", "redis", "--port", "6379" ]
+  celery:
+    image: celery
+    environment:
+      docker: "true"
+    build:
+      context: .
+      dockerfile: services/celery/Dockerfile
+  flower:
+    image: celery
+    command:
+      [
+        "celery",
+        "-A",
+        "services.celery.email.service",
+        "flower",
+        "--address=0.0.0.0",
+        "--port=5555"
+      ]
+    ports:
+      - "5555:5555"

@@ -17,6 +17,8 @@ class User(Base):
         nullable=False,
         default=uuid4,
     )
+    email = Column(String, unique=True, index=True, nullable=False)
+    mail_confirmed = Column(Boolean, default=False)
     username = Column(String, unique=True, index=True, nullable=False)
     is_superuser = Column(Boolean, default=False)
     hashed_password = Column(String)
