@@ -19,7 +19,7 @@ redis_client = RedisClient()
 @router.get("/")
 def list_users(dao: UserDAO = Depends(DependencyFactory.get_user_dao)):
     users = dao.get_all()
-    users.data = [UserResponse(username=i.username, is_superuser=i.is_superuser) for i in users.data]
+    users.data = [UserResponse(username=i.username, is_superuser=i.is_superuser, email=i.email) for i in users.data]
     return users
 
 
@@ -57,7 +57,11 @@ async def delete_user(
         if delete_result.success:
             return JSONResponse(
                 jsonable_encoder(
-                    UserResponse(username=delete_result.data.username, is_superuser=delete_result.data.is_superuser)
+                    UserResponse(
+                        username=delete_result.data.username,
+                        is_superuser=delete_result.data.is_superuser,
+                        email=delete_result.data.email,
+                    )
                 ),
                 status_code=status.HTTP_200_OK,
             )
@@ -77,7 +81,11 @@ async def change_password(
     if update_result.success:
         return JSONResponse(
             jsonable_encoder(
-                UserResponse(username=update_result.data.username, is_superuser=update_result.data.is_superuser)
+                UserResponse(
+                    username=update_result.data.username,
+                    is_superuser=update_result.data.is_superuser,
+                    email=update_result.data.email,
+                )
             ),
             status_code=status.HTTP_200_OK,
         )
@@ -94,7 +102,11 @@ async def change_username(
     if update_result.success:
         return JSONResponse(
             jsonable_encoder(
-                UserResponse(username=update_result.data.username, is_superuser=update_result.data.is_superuser)
+                UserResponse(
+                    username=update_result.data.username,
+                    is_superuser=update_result.data.is_superuser,
+                    email=update_result.data.email,
+                )
             ),
             status_code=status.HTTP_200_OK,
         )
@@ -114,7 +126,11 @@ async def update_user(
         if update_result.success:
             return JSONResponse(
                 jsonable_encoder(
-                    UserResponse(username=update_result.data.username, is_superuser=update_result.data.is_superuser)
+                    UserResponse(
+                        username=update_result.data.username,
+                        is_superuser=update_result.data.is_superuser,
+                        email=update_result.data.email,
+                    )
                 ),
                 status_code=status.HTTP_200_OK,
             )
