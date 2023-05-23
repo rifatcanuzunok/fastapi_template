@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from utils import Result
 from utils.wrapper import handle_sqlalchemy_errors
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 T = TypeVar("T")
 
@@ -20,8 +21,12 @@ class AbstractDAO(Generic[T], ABC):
         return Result(success=True, data=data)
 
     @handle_sqlalchemy_errors
-    def get_by(self, column_name: str, column_value) -> Result[T]:
-        data: T = self.session.query(self.model).filter(getattr(self.model, column_name.key) == column_value).first()
+    def get_by(self, column_name: InstrumentedAttribute, column_value) -> Result[T]:
+        data: T = (
+            self.session.query(self.model)
+            .filter(getattr(self.model, column_name.key) == column_value)
+            .first()
+        )
         return Result(success=True, data=data)
 
     @handle_sqlalchemy_errors

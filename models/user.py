@@ -2,7 +2,6 @@ import datetime
 from uuid import uuid4
 
 from sqlalchemy import UUID, Boolean, Column, DateTime, String
-from sqlalchemy.orm import relationship
 
 from database import Base
 
